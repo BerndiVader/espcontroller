@@ -20,8 +20,7 @@ public class LedSlider : Godot.HSlider
 
     public virtual void _Update_State(string[] data)
     {
-        Value=data[1].ToInt();
-
+        Value=data[4].ToInt();
     }
 
 }

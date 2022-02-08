@@ -14,4 +14,9 @@ public class StripSlider : LedSlider
         Controller.send_udp((char)UDP_COMMAND.RGBSTRIP_DIMM+":"+(int)value);
     }
 
+    public override void _Update_State(string[] data)
+    {
+        Value=data[8].ToInt();
+    }
+
 }

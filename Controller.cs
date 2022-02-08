@@ -1,8 +1,7 @@
 using Godot;
 using System;
 using System.Text;
-using System.Collections;
-using System.Net;
+using System.Text.Json;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -12,58 +11,65 @@ public class Controller : Node2D
 	public const string hndshk = "ESP32HNDSHK";
 	public const int udp_port = 19740;
 	public const int handshake_port=19680;
-	public static bool hovered;
+	public static LedConfig ledConfig;
+
+	private TabContainer container;
 
 	public override void _Ready()
 	{
-		VisualServer.SetDefaultClearColor(new Color(0.388235f, 0.25098f, 0.313726f,1f));        
+		ledConfig=new LedConfig();
+		VisualServer.SetDefaultClearColor(new Color(0.388235f, 0.25098f, 0.313726f,1f));
+		container=GetNode<TabContainer>("TabContainer");
 
-		hovered=false;
-        SetProcess(true);
-		
-		handshake(this);
+		var options=new JsonSerializerOptions
+		{
+			IncludeFields=true,
+		};
+
+		GD.Print(JsonSerializer.Serialize(ledConfig,options));
+
+		InstallListener(this);
+		send_udp(Char.ToString((char)UDP_COMMAND.HANDSHAKE));
 
 	}
 
 	public override void _Process(float delta)
 	{
-		if(hovered)
-		{
-			Input.SetDefaultCursorShape(Input.CursorShape.PointingHand);
-		}
-		else
-		{
-			Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
-		}
-		hovered=false;
+
 	}
 
-	private static async void handshake(Controller controller)
+	private static void InstallListener(Controller controller)
 	{
 
 		string[]data=new string[0];
 		string answer="";
 		long ticks=DateTime.Now.Ticks;
-		Task task=Task.Run(()=>
-		{
-			send_udp(Char.ToString((char)UDP_COMMAND.HANDSHAKE));
 
-			using (UdpClient client=new UdpClient(handshake_port))
-			{
-				IPEndPoint point=new IPEndPoint(IPAddress.Any,handshake_port);
-				var result=client.Receive(ref point);
-				answer=Encoding.ASCII.GetString(result);
-			}
-			data=answer.Split(":");
-		});
-		if(await Task.WhenAny(task,Task.Delay(5000*5))==task)
+		Task.Run(async()=>
 		{
-			GD.Print(new TimeSpan(DateTime.Now.Ticks-ticks));
-			if(data[0].Equals(hndshk))
+			using(UdpClient client=new UdpClient(handshake_port))
 			{
-				controller.GetTree().CallGroup("UI","_Update_State",data.Clone());
+				while(true)
+				{
+					UdpReceiveResult result=await client.ReceiveAsync();
+					answer=Encoding.ASCII.GetString(result.Buffer);
+					if(answer.StartsWith(hndshk))
+					{
+
+						GD.Print(answer);
+						answer=answer.Replace(hndshk+":","");
+						GD.Print(answer);
+						data=answer.Split(":");
+						if(data.Length!=0&&data[0].Equals(hndshk))
+						{
+							controller.GetTree().CallGroup("UI","_Update_State",data.Clone());
+						}
+					}
+
+				}
 			}
-		}
+
+		});
 	}
 
 	public static void send_udp(string data)
@@ -75,6 +81,5 @@ public class Controller : Node2D
 		}
 
 	}
-
 
 }
