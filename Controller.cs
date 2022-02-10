@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using System.Net.Sockets;
@@ -25,6 +26,13 @@ public class Controller : Node2D
 		{
 			IncludeFields=true,
 		};
+
+		List<LedConfig.RgbLed>rgbs=new List<LedConfig.RgbLed>();
+		rgbs.Add(new LedConfig.RgbLed(1,2,3));
+		rgbs.Add(new LedConfig.RgbLed(2,3,1));
+		rgbs.Add(new LedConfig.RgbLed(3,1,2));
+		rgbs.Add(new LedConfig.RgbLed(4,3,1));
+		ledConfig.rgbs=rgbs;
 
 		GD.Print(JsonSerializer.Serialize(ledConfig,options));
 
@@ -68,8 +76,6 @@ public class Controller : Node2D
 			}
 
 		});
-
-		
 		
 	}
 
