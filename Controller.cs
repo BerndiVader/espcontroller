@@ -37,15 +37,14 @@ public class Controller : Node2D
 	{
 
 	}
-
+	
 	private static void InstallListener(Controller controller)
 	{
 
 		string[]data=new string[0];
 		string answer="";
-		long ticks=DateTime.Now.Ticks;
 
-		Task.Run(async()=>
+		Task.Factory.StartNew(async()=>
 		{
 			using(UdpClient client=new UdpClient(handshake_port))
 			{
@@ -55,7 +54,6 @@ public class Controller : Node2D
 					answer=Encoding.ASCII.GetString(result.Buffer);
 					if(answer.StartsWith(hndshk))
 					{
-
 						GD.Print(answer);
 						answer=answer.Replace(hndshk+":","");
 						GD.Print(answer);
@@ -70,6 +68,9 @@ public class Controller : Node2D
 			}
 
 		});
+
+		
+		
 	}
 
 	public static void send_udp(string data)
