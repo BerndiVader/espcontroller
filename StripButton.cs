@@ -19,9 +19,9 @@ public class StripButton : LedButton
 
 	}
 
-    public override void _Update_State(string[] data)
+    public override void _Update_State()
     {
-        Pressed=data[6].Equals("0")==false;
+        Pressed=Controller.ledConfig.rgb_onoff;
     }
 
 }

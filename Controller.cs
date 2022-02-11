@@ -1,8 +1,6 @@
 using Godot;
 using System;
-using System.Collections.Generic;
 using System.Text;
-using System.Text.Json;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -12,29 +10,15 @@ public class Controller : Node2D
 	public const string hndshk = "ESP32HNDSHK";
 	public const int udp_port = 19740;
 	public const int handshake_port=19680;
-	public static LedConfig ledConfig;
 
 	private TabContainer container;
+	public static LedConfig ledConfig;
 
 	public override void _Ready()
 	{
-		ledConfig=new LedConfig();
 		VisualServer.SetDefaultClearColor(new Color(0.388235f, 0.25098f, 0.313726f,1f));
 		container=GetNode<TabContainer>("TabContainer");
-
-		var options=new JsonSerializerOptions
-		{
-			IncludeFields=true,
-		};
-
-		List<LedConfig.RgbLed>rgbs=new List<LedConfig.RgbLed>();
-		rgbs.Add(new LedConfig.RgbLed(1,2,3));
-		rgbs.Add(new LedConfig.RgbLed(2,3,1));
-		rgbs.Add(new LedConfig.RgbLed(3,1,2));
-		rgbs.Add(new LedConfig.RgbLed(4,3,1));
-		ledConfig.rgbs=rgbs;
-
-		GD.Print(JsonSerializer.Serialize(ledConfig,options));
+		ledConfig=new LedConfig();
 
 		InstallListener(this);
 		send_udp(Char.ToString((char)UDP_COMMAND.HANDSHAKE));
@@ -49,27 +33,25 @@ public class Controller : Node2D
 	private static void InstallListener(Controller controller)
 	{
 
-		string[]data=new string[0];
-		string answer="";
-
 		Task.Factory.StartNew(async()=>
 		{
 			using(UdpClient client=new UdpClient(handshake_port))
 			{
+				string[] data=new string[0];
+				string answer=string.Empty;
+
 				while(true)
 				{
 					UdpReceiveResult result=await client.ReceiveAsync();
 					answer=Encoding.ASCII.GetString(result.Buffer);
-					if(answer.StartsWith(hndshk))
+					data=answer.Split(":");
+
+					if(data.Length>0&&data[0].ToInt()==(int)UDP_COMMAND.HANDSHAKE)
 					{
-						GD.Print(answer);
-						answer=answer.Replace(hndshk+":","");
-						GD.Print(answer);
-						data=answer.Split(":");
-						if(data.Length!=0&&data[0].Equals(hndshk))
-						{
-							controller.GetTree().CallGroup("UI","_Update_State",data.Clone());
-						}
+						update_config(data);
+						controller.GetTree().CallGroup("UI","_Update_State");
+
+
 					}
 
 				}
@@ -77,6 +59,24 @@ public class Controller : Node2D
 
 		});
 		
+	}
+
+	public static void update_config(string[] data)
+	{
+		for(int i1=1;i1<data.Length;i1+=2)
+		{
+			switch(data[i1].ToInt())
+			{
+				case (int)UDP_COMMAND.BUILDIN_LED_SWITCH:
+					ledConfig.buildin_led=data[i1+1].ToInt()==1;
+				break;
+				case (int)UDP_COMMAND.BUILDIN_LED_DIMM:
+					ledConfig.buildin_led_brightness=data[i1+1].ToInt();
+				break;
+			
+			}
+		}
+
 	}
 
 	public static void send_udp(string data)

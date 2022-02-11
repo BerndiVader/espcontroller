@@ -18,9 +18,9 @@ public class LedSlider : Godot.HSlider
 
     }
 
-    public virtual void _Update_State(string[] data)
+    public virtual void _Update_State()
     {
-        Value=data[4].ToInt();
+        Value=Controller.ledConfig.buildin_led_brightness;
     }
 
 }

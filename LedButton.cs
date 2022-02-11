@@ -14,12 +14,12 @@ public class LedButton : Godot.CheckButton
 	public override void _Toggled(bool pressed)
 	{
         Controller.send_udp(Char.ToString((char)UDP_COMMAND.BUILDIN_LED_SWITCH)+":"+Convert.ToInt16(pressed));
-
 	}
 
-    public virtual void _Update_State(string[] data)
+    public virtual void _Update_State()
     {
-        Pressed=data[2].Equals("0")==false;
+    
+        Pressed=Controller.ledConfig.buildin_led;
     }
 
 
