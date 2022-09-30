@@ -13,6 +13,7 @@ public class LedConfig
             this.brightness=brightness;
 
         }
+
         public int pos{get;set;}
         public int color{get;set;}
         public int brightness{get;set;}

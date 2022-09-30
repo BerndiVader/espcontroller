@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 public class Controller : Node2D
 {
-	public const string udp_ip = "192.168.43.100";
-	public const string hndshk = "ESP32HNDSHK";
-	public const int udp_port = 19740;
-	public const int handshake_port=19680;
+	public const string UDP_IP = "192.168.43.100";
+	public const string HNDSHK = "ESP32HNDSHK";
+	public const int UDP_PORT = 19740;
+	public const int HANDSHAKE_PORT=19680;
 
 	private TabContainer container;
 	public static LedConfig ledConfig;
@@ -35,7 +35,7 @@ public class Controller : Node2D
 
 		Task.Factory.StartNew(async()=>
 		{
-			using(UdpClient client=new UdpClient(handshake_port))
+			using(UdpClient client=new UdpClient(HANDSHAKE_PORT))
 			{
 				string[] data=new string[0];
 				string answer=string.Empty;
@@ -50,8 +50,6 @@ public class Controller : Node2D
 					{
 						update_config(data);
 						controller.GetTree().CallGroup("UI","_Update_State");
-
-
 					}
 
 				}
@@ -81,10 +79,10 @@ public class Controller : Node2D
 
 	public static void send_udp(string data)
 	{
-		using(UdpClient client=new UdpClient(udp_port))
+		using(UdpClient client=new UdpClient(UDP_PORT))
 		{
 			byte[]bytes=Encoding.ASCII.GetBytes(data);
-			client.Send(bytes,bytes.Length,udp_ip,udp_port);
+			client.Send(bytes,bytes.Length,UDP_IP,UDP_PORT);
 		}
 
 	}
